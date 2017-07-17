@@ -23,6 +23,11 @@ dataset = args.dataset
 moviefile  = os.path.join(dataset,"movies.csv")
 ratingfile = os.path.join(dataset,"ratings.csv")
 
+# not implemented
+if args.last:
+    print("--last is not implemented")
+    exit(1)
+
 # create output directory
 if not os.path.exists(output):
     os.makedirs(output)
@@ -97,9 +102,51 @@ size_of_bag = len(data)//args.k
 print("size_of_bag =",size_of_bag)
 T = [ data[i*size_of_bag:(i+1)*size_of_bag] for i in range(args.k) ]
 
+def get_field( field ):
+    if args.field_aware:
+        return str(field)+":"
+    else:
+        return ""
+
 def generate( filename, data ):
     with open(filename,"w") as out:
-        pass
+        for user,movie,genre,rating,timestamp in data:
+            offset = 0
+            field = 0
+            # rating
+            out.write(rating)
+            # user
+            if True:
+                out.write(" "+get_field(field)+str(offset+int(user))+":1")
+                offset += len(user_to_id)
+                field += 1
+            # movie
+            if True:
+                out.write(" "+get_field(field)+str(offset+int(movie))+":1")
+                offset += len(movie_to_id)
+                field += 1
+            # timespamp
+            if args.timestamp:
+                out.write(" "+get_field(field)+str(offset)+":"+("%.4f"%(float(timestamp)/(60*60))))
+                offset += 1
+                field += 1
+            # genre
+            if args.genre:
+                for g in genre:
+                    id = genre_to_id[g]
+                    out.write(" "+get_field(field)+str(offset+int(id))+(":%.4f"%(1./len(genre))))
+                offset += len(genre_to_id)
+                field += 1
+            # other
+            if args.other:
+                hist = history[user]
+                for (t,m) in hist:
+                    out.write(" "+get_field(field)+str(offset+int(m))+":%.4f"%(1./len(hist)))
+                offset += len(movie_to_id)
+                field += 1
+                    
+
+            out.write("\n")
     
 for i in range(args.k):
     train = []
